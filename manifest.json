@@ -1,0 +1,44 @@
+{
+    "manifest_version":2,
+    "name":"Quick-Nav",
+    "version":"0.0.1",
+    "description":"浏览器快捷导航插件",
+    "icons":{
+        "16":"img/icon.png",
+        "48":"img/icon.png",
+        "128":"img/icon.png"
+    },
+    "background":{
+        "page":"background.html"
+    },
+    "browser_action":{
+        "default_icon":"img/icon.png",
+        "default_title":"Quick-Nav by Soft98",
+        "default_popup":"popup.html"
+    },
+    "options_ui":
+    {
+        "page": "options.html",
+        "chrome_style": false
+    },
+    "content_scripts":[
+        {
+            "matches":["<all_urls>"],
+            "js":["js/jquery-3.5.1.js"],
+            "run_at":"document_start"
+        }
+    ],
+    "omnibox": { "keyword" : "nav" },
+    "web_accessible_resources":[
+        "options.html"
+    ],
+    "permissions":[
+        "contextMenus",
+        "tabs",
+        "notifications",
+        "storage",
+        "http://*/*",
+        "https://*/*"
+    ],
+    "homepage_url":"https://github.com/soft98-top/Quick-Nav"
+}
