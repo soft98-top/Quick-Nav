@@ -234,7 +234,7 @@ chrome.contextMenus.create({
     "contexts":["all"],
     "parentId":"1",
     "onclick":function(){
-        
+        Handle.addByJson();
     }
 });
 // 按键监听
