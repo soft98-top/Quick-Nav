@@ -32,9 +32,13 @@ var Nav = {
     data:{},
     keywords:[],
     map:{},
+    funcs:{},
     parseMap(object){
         if(object.map != undefined){
             Object.assign(this.map,object.map);
+        }
+        if(object.funcs != undefined){
+            Object.assign(this.funcs,object.funcs);
         }
         this.refresh();
     },
@@ -43,7 +47,21 @@ var Nav = {
         this.keywords.sort((a, b) => (b.length === a.length ? 0 : a.length > b.length ? 1 : -1));
         this.data["keywords"] = this.keywords;
         this.data["map"] = this.map;
+        this.data["funcs"] = this.funcs;
         Jsdbc.set({'data':this.data});
+        for(let i = 0; i < this.keywords.length; i++){
+            let keyword = this.keywords[i];
+            if(this.funcs[keyword]!=undefined){
+                let funcStr = 'Handle.func["xxx"] = function(query){yyy}';
+                funcStr = funcStr.replace('xxx',keyword);
+                funcStr = funcStr.replace('yyy',this.funcs[keyword]);
+                eval(funcStr);
+            }else{
+                let funcStr = 'Handle.func["xxx"] = null';
+                funcStr = funcStr.replace('xxx',keyword);
+                eval(funcStr);
+            }
+        }
     },
     init(){
         this.data = Jsdbc.data;
@@ -60,13 +78,95 @@ var Operation = {
     addByJson(object){
         Nav.parseMap({'map':object});
     },
+    addFunc(keyword, func){
+        temp = {};
+        temp[keyword] = func;
+        Nav.parseMap({'funcs':temp});
+    },
+    addFuncByJson(object){
+        Nav.parseMap({'funcs':object});
+    },
     del(keyword){
         delete Nav.map[keyword];
+        delete Nav.funcs[keyword];
         Nav.refresh();
     },
     delAll(){
         Nav.map = {};
         Nav.refresh();
+    },
+    delFunc(keyword){
+        delete Nav.funcs[keyword];
+        Nav.refresh();
+    },
+    delAllFunc(){
+        Nav.funcs = {};
+        Nav.refresh();
+    }
+}
+// 用来存放各个关键字的处理函数，并通过Handle进行调用
+var Handle = {
+    func:{},
+    search(text){
+        if(!text || text == "Tips"){
+            return;
+        }
+        let keywords = Nav.keywords;
+        let url = "";
+        if(keywords.length == 0){
+            url = "https://www.baidu.com/s?wd={q}";
+        }else{
+            text = text.trim();
+            let keyword = text.split(" ")[0];
+            url = Nav.map[keyword];
+            if(url == undefined){
+                url = "https://www.baidu.com/s?wd={q}";
+            }else{
+                text = text.replace(keyword + " ","");
+                if(Handle.func[keyword]!=null){
+                    let funcStr = 'Handle.func.??("query")';
+                    funcStr = funcStr.replace("??",keyword);
+                    funcStr = funcStr.replace("query",text);
+                    text = eval(funcStr);
+                }
+            }
+        }
+        url = url.replace("\{q\}",text);
+        chrome.tabs.create({"url":url},function(){
+        });
+    },
+    add(){
+        let url = prompt("输入网址，将需要填充的位置用{q}代替：");
+        if(url != null){
+            let keyword = prompt("请输入映射的关键字：");
+            if(keyword){
+                Operation.add(keyword,url);
+                let code = prompt("请输入自定义处理语句（选填）,输入的字符串变量名为query,默认为原样填充。")
+                if(code){
+                    Operation.addFunc(keyword,code);
+                }
+            }
+        }
+    },
+    addByParams(params){
+        let url = prompt("将需要填充的位置用{q}代替：",params.pageUrl);
+        if(url != null){
+            let keyword = prompt("请输入映射的关键字：");
+            if(keyword){
+                Operation.add(keyword,url);
+                let code = prompt("请输入自定义处理语句（选填）,输入的字符串变量名为query,默认为原样填充。")
+                if(code){
+                    Operation.addFunc(keyword,code);
+                }
+            }
+        }
+    },
+    addByJson(){
+        let jsonStr = prompt('请输入符合格式json字符串{key:url}，例如：{"soft98":"https://www.soft98.top/"}');
+        if(jsonStr != null){
+            let json = JSON.parse(jsonStr);
+            Operation.addByJson(json);
+        }
     }
 }
 Jsdbc.init();
@@ -101,26 +201,7 @@ chrome.omnibox.onInputChanged.addListener((text, suggest) => {
 chrome.omnibox.onInputEntered.addListener((text) => {
     // 回车无内容，不做处理
     // console.log(text);
-    if(!text || text == "Tips"){
-        return;
-    }
-    let keywords = Nav.keywords;
-    let url = "";
-    if(keywords.length == 0){
-        url = "https://www.baidu.com/s?wd={q}";
-    }else{
-        text = text.trim();
-        let keyword = text.split(" ")[0];
-        url = Nav.map[keyword];
-        if(url == undefined){
-            url = "https://www.baidu.com/s?wd={q}";
-        }else{
-            text = text.replace(keyword + " ","");
-        }
-    }
-    url = url.replace("\{q\}",text);
-    chrome.tabs.create({"url":url},function(){
-    });
+    Handle.search(text);
 });
 // 通过右键菜单来增加关键字映射
 chrome.contextMenus.create({
@@ -135,13 +216,7 @@ chrome.contextMenus.create({
     "contexts":["all"],
     "parentId":"1",
     "onclick":function(){
-        let url = prompt("输入网址，将需要填充的位置用{q}代替：");
-        if(url != null){
-            let keyword = prompt("请输入映射的关键字：");
-            if(keyword){
-                Operation.add(keyword,url);
-            }
-        }
+        Handle.add();
     }
 });
 chrome.contextMenus.create({
@@ -150,13 +225,7 @@ chrome.contextMenus.create({
     "contexts":["all"],
     "parentId":"1",
     "onclick":function(params){
-        let url = prompt("将需要填充的位置用{q}代替：",params.pageUrl);
-        if(url != null){
-            let keyword = prompt("请输入映射的关键字：");
-            if(keyword){
-                Operation.add(keyword,url);
-            }
-        }
+        Handle.addByParams(params);
     }
 });
 chrome.contextMenus.create({
@@ -165,10 +234,19 @@ chrome.contextMenus.create({
     "contexts":["all"],
     "parentId":"1",
     "onclick":function(){
-        let jsonStr = prompt('请输入符合格式json字符串{key:url}，例如：{"soft98":"https://www.soft98.top/"}');
-        if(jsonStr != null){
-            let json = JSON.parse(jsonStr);
-            Operation.addByJson(json);
-        }
+        
+    }
+});
+// 按键监听
+chrome.commands.onCommand.addListener(function(command) {
+    if(command === "command-popup-search" || command === "command-popup-search-global"){
+        let text = prompt("根据格式进行输入，默认使用百度搜索。");
+        Handle.search(text);
+    }
+    if(command === "command-popup-add"){
+        Handle.add();
+    }
+    if(command === "command-popup-addByJson"){
+        Handle.addByJson();
     }
 });

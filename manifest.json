@@ -1,15 +1,55 @@
 {
     "manifest_version":2,
     "name":"Quick-Nav",
-    "version":"0.1.0",
+    "version":"0.2.0",
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
     "description":"浏览器快捷导航插件",
+    "permissions":[
+        "contextMenus",
+        "tabs",
+        "notifications",
+        "storage",
+        "<all_urls>"
+    ],
     "icons":{
         "16":"img/icon.png",
         "48":"img/icon.png",
         "128":"img/icon.png"
     },
     "background":{
-        "scripts":["js/jquery-3.5.1.js","js/background.js"]
+        "page":"background.html",
+        "persistent": true
+    },
+    "commands":{
+        "command-popup-search-global":{
+            "suggested_key": {
+                "default": "Ctrl+Shift+1",
+                "mac":"Command+Shift+1"
+            },
+            "description": "Quick-Nav Command",
+            "global":true
+        },
+        "command-popup-search":{
+            "suggested_key": {
+                "default": "Alt+J",
+                "mac":"Command+J"
+            },
+            "description": "Quick-Nav Command"
+        },
+        "command-popup-add":{
+            "suggested_key": {
+                "default": "Alt+K",
+                "mac":"Command+K"
+            },
+            "description": "Quick-Nav Command"
+        },
+        "command-popup-addByJson":{
+            "suggested_key": {
+                "default": "Alt+L",
+                "mac":"Command+L"
+            },
+            "description": "Quick-Nav Command"
+        }
     },
     "browser_action":{
         "default_icon":"img/icon.png",
@@ -31,15 +71,6 @@
     "omnibox": { "keyword" : "nav" },
     "web_accessible_resources":[
         "options.html"
-    ],
-    "permissions":[
-        "extension",
-        "contextMenus",
-        "tabs",
-        "notifications",
-        "storage",
-        "http://*/*",
-        "https://*/*"
     ],
     "homepage_url":"https://github.com/soft98-top/Quick-Nav"
 }
