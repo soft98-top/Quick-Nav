@@ -76,7 +76,7 @@ var Operation = {
         Nav.parseMap({'map':temp});
     },
     addByJson(object){
-        Nav.parseMap({'map':object});
+        Nav.parseMap(object);
     },
     addFunc(keyword, func){
         temp = {};
@@ -84,7 +84,7 @@ var Operation = {
         Nav.parseMap({'funcs':temp});
     },
     addFuncByJson(object){
-        Nav.parseMap({'funcs':object});
+        Nav.parseMap(object);
     },
     del(keyword){
         delete Nav.map[keyword];
@@ -167,6 +167,9 @@ var Handle = {
             let json = JSON.parse(jsonStr);
             Operation.addByJson(json);
         }
+    },
+    export(){
+        prompt("请复制下面所有的内容",JSON.stringify(Nav.data));
     }
 }
 Jsdbc.init();
@@ -209,6 +212,15 @@ chrome.contextMenus.create({
     "title":"Quick-Nav",
     "contexts":["all"],
     "id":"1"
+});
+chrome.contextMenus.create({
+    "type":"normal",
+    "title":"导出当前映射规则",
+    "contexts":["all"],
+    "parentId":"1",
+    "onclick":function(){
+        Handle.export();
+    }
 });
 chrome.contextMenus.create({
     "type":"normal",
