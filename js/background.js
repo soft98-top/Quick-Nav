@@ -139,11 +139,19 @@ var Handle = {
         let url = prompt("输入网址，将需要填充的位置用{q}代替：");
         if(url != null){
             let keyword = prompt("请输入映射的关键字：");
+            let flag = true;
             if(keyword){
-                Operation.add(keyword,url);
-                let code = prompt("请输入自定义处理语句（选填）,输入的字符串变量名为query,默认为原样填充。")
-                if(code){
-                    Operation.addFunc(keyword,code);
+                if(Nav.map[keyword]){
+                    if(!confirm(keyword + "关键字已经存在，是否替换？")){
+                        flag = false;
+                    }
+                }
+                if(flag){
+                    Operation.add(keyword,url);
+                    let code = prompt("请输入自定义处理语句（选填）,输入的字符串变量名为query,默认为原样填充。")
+                    if(code){
+                        Operation.addFunc(keyword,code);
+                    }
                 }
             }
         }
@@ -152,17 +160,25 @@ var Handle = {
         let url = prompt("将需要填充的位置用{q}代替：",params.pageUrl);
         if(url != null){
             let keyword = prompt("请输入映射的关键字：");
+            let flag = true;
             if(keyword){
-                Operation.add(keyword,url);
-                let code = prompt("请输入自定义处理语句（选填）,输入的字符串变量名为query,默认为原样填充。")
-                if(code){
-                    Operation.addFunc(keyword,code);
+                if(Nav.map[keyword]){
+                    if(!confirm(keyword + "关键字已经存在，是否替换？")){
+                        flag = false;
+                    }
+                }
+                if(flag){
+                    Operation.add(keyword,url);
+                    let code = prompt("请输入自定义处理语句（选填）,输入的字符串变量名为query,默认为原样填充。")
+                    if(code){
+                        Operation.addFunc(keyword,code);
+                    }
                 }
             }
         }
     },
     addByJson(){
-        let jsonStr = prompt('请输入符合格式json字符串{key:url}，例如：{"soft98":"https://www.soft98.top/"}');
+        let jsonStr = prompt('请输入符合格式的json字符串');
         if(jsonStr != null){
             let json = JSON.parse(jsonStr);
             Operation.addByJson(json);
